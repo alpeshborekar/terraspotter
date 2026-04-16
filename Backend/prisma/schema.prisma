@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  LANDOWNER
+  VOLUNTEER
+}
+
+enum LandStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PlantationStatus {
+  CREATED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id                String    @id @default(uuid())
+  name              String
+  email             String    @unique
+  password          String
+  role              Role      @default(VOLUNTEER)
+  isVerified        Boolean   @default(false)
+  refreshTokens     RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  lands             Land[]
+  plantations       Plantation[]
+  reviews           Review[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model Land {
+  id            String       @id @default(uuid())
+  title         String
+  description   String?
+  latitude      Float
+  longitude     Float
+  areaInAcres   Float
+  soilType      String
+  climateZone   String
+  status        LandStatus   @default(PENDING)
+  ownerId       String
+  owner         User         @relation(fields: [ownerId], references: [id])
+  images        LandImage[]
+  recommendations LandRecommendation[]
+  plantations   Plantation[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("lands")
+}
+
+model LandImage {
+  id          String   @id @default(uuid())
+  url         String
+  publicId    String
+  landId      String
+  land        Land     @relation(fields: [landId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@map("land_images")
+}
+
+model LandRecommendation {
+  id            String   @id @default(uuid())
+  landId        String
+  land          Land     @relation(fields: [landId], references: [id], onDelete: Cascade)
+  treeSpecies   String[]
+  capacity      Int
+  confidence    Float
+  rawResponse   Json
+  createdAt     DateTime @default(now())
+
+  @@map("land_recommendations")
+}
+
+model Plantation {
+  id          String           @id @default(uuid())
+  title       String
+  description String?
+  status      PlantationStatus @default(CREATED)
+  landId      String
+  land        Land             @relation(fields: [landId], references: [id])
+  createdById String
+  createdBy   User             @relation(fields: [createdById], references: [id])
+  images      PlantationImage[]
+  reviews     Review[]
+  treesPlanted Int             @default(0)
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("plantations")
+}
+
+model PlantationImage {
+  id           String     @id @default(uuid())
+  url          String
+  publicId     String
+  plantationId String
+  plantation   Plantation @relation(fields: [plantationId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@map("plantation_images")
+}
+
+model Review {
+  id           String     @id @default(uuid())
+  rating       Int
+  comment      String?
+  plantationId String
+  plantation   Plantation @relation(fields: [plantationId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@map("reviews")
+}
