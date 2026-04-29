@@ -1,6 +1,26 @@
+# Node
 node_modules/
-.env
 dist/
 *.log
+
+# Env
+.env
+.env.*
+
+# OS
 .DS_Store
-/src/generated/prisma
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Prisma
+Backend/src/generated/prisma/
+
+# Python / ML
+models/venv/
+models/model/
+*.pkl
+__pycache__/
+*.pyc
